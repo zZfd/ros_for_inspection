@@ -1,0 +1,3 @@
+http://localhost:8887/stream_viewer?topic=/kinect/rgb/image_raw
+rosrun web_video_server web_video_server
+roslaunch rosbridge_server rosbridge_websocket.launch

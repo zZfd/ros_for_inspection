@@ -1,0 +1,35 @@
+zfd@ubuntu:~$ rosmsg show nav_msgs/Odometry 
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+string child_frame_id
+geometry_msgs/PoseWithCovariance pose
+  geometry_msgs/Pose pose
+    geometry_msgs/Point position
+      float64 x   x++前
+      float64 y   y++左
+      float64 z
+    geometry_msgs/Quaternion orientation
+      float64 x
+      float64 y  0.00 0.99
+      float64 z  z++左旋转 逆时针  -1-1 面朝前0  左旋转++ 面朝后为 1  然后继续旋转则减小 
+      float64 w
+  float64[36] covariance
+geometry_msgs/TwistWithCovariance twist
+  geometry_msgs/Twist twist
+    geometry_msgs/Vector3 linear
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Vector3 angular
+      float64 x
+      float64 y
+      float64 z
+  float64[36] covariance
+
+
+//二维码识别到的字符串，10位，前三位设备ID，后三位部件ID，再后三位项目ID，最后一位类型ID
+1011011011
+1011011021
+1011021031

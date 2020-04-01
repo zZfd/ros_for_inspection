@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+
+  <!-- <script src="https://static.robotwebtools.org/EaselJS/current/easeljs.js"></script>
+<script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script src="https://static.robotwebtools.org/roslibjs/current/roslib.js"></script> -->
+  <script src="./easeljs.js"></script>
+  <script src="./eventemitter2.min.js"></script>
+  <script src="./roslib.js"></script>
+  <script src="./ros2d.js"></script>
+
+  <script>
+    /**
+     * Setup all visualization elements when the page is loaded. 
+     */
+    // var shape = new createjs.Shape();
+    // var graphics = new createjs.Graphics();
+    // // graphics.setStrokeStyle(3);
+    // // graphics.beginStroke(createjs.Graphics.getRGB(255,0,0));
+    // // graphics.moveTo(100, 100);
+    // // graphics.lineTo(200, 200);
+    // graphics.beginFill('red').drawCircle(100,100,80,80);
+    // graphics.beginFill("red");
+    // graphics.drawCircle(100,100,60,60);
+
+    //graphics.endFill();
+
+    //shape.graphics = graphics;
+	// function init(){
+	// var url = window.external.getRosIp();
+	// 	alert(url);
+	// }
+    // function init() {
+    //   //Connect to ROS.
+    //   var shape = new createjs.Shape();
+    //   shape.graphics.beginFill('red').drawCircle(5,5,5,5);
+    //   shape.graphics.endFill();
+    //   stage.addChildAt(shape,1);
+	 
+    //   var ros = new ROSLIB.Ros({
+    //     url: 'ws://localhost:8888'
+    //   });
+    //   ros.on('connection', function () {
+    //     alert('连接成功');
+    //     // Create the main viewer.
+    //     var viewer = new ROS2D.Viewer({
+    //       divID: 'map',
+    //       width: 1000,
+    //       height: 800,
+    //     });
+
+    //     // Setup the map client.
+        // var gridClient = new ROS2D.OccupancyGridClient({
+        //   ros: ros,
+        //   rootObject: viewer.scene
+        // });
+    //     // Add a test shape
+    //     //viewer.scene.addChildAt(shape,0);
+    //     //viewer.scene.update();
+    //     // viewer.scene.addChild(new ROS2D.Grid({size:1}));
+    //     // console.log(viewer.scene.getChildAt(0));
+    //     // console.log(viewer.scene.getChildAt(1));
+    //     // console.log(viewer.scene.getChildAt(2));
+    //     // console.log(viewer.scene.getChildAt(3));
+    //     //console.log('shape index:'+viewer.scene.getChildIndex(shape));
+
+    //     // Setup a client to listen to TFs.
+    //     // var tfClient = new ROSLIB.TFClient({
+    //     //   ros: ros,
+    //     //   fixedFrame: 'odom',
+    //     //   angularThres: 0.01,
+    //     //   transThres: 0.01,
+    //     //   rate: 10.0
+    //     // });
+
+
+
+    //     // Scale the canvas to fit to the map
+    //   //   gridClient.on('change', function () {
+    //   //     viewer.scaleToDimensions(gridClient.currentGrid.width, gridClient.currentGrid.height);
+    //   //     viewer.shift(gridClient.currentGrid.pose.position.x, gridClient.currentGrid.pose.position.y);
+    //   //   });
+    //   // });
+
+    //   ros.on('error', function () {
+    //     alert('连接失败！');
+    //   });
+
+    //   ros.on('close', function () {
+    //     alert('连接断开!');
+    //   });
+    // }
+    // }
+  </script>
+</head>
+
+<body>
+  <h1>Simple Map Example</h1>
+  <p>
+    Run the following commands in the terminal then refresh this page. This will load a map from the
+    <tt>ros-groovy-rail-maps</tt>
+    package.
+  </p>
+  <ol>
+    <li><tt>roscore</tt></li>
+    <li><tt>rosrun map_server map_server /opt/ros/groovy/share/rail_maps/maps/ilab.pgm
+        0.05</tt></li>
+    <li><tt>roslaunch rosbridge_server rosbridge_websocket.launch</tt></li>
+  </ol>
+  <div id="map"></div>
+  <script>
+    function init() {
+      //Connect to ROS.
+      // var shape = new createjs.Shape();
+      // shape.graphics.beginFill('red').drawCircle(5,5,5,5);
+      // shape.graphics.endFill();
+      // stage.addChildAt(shape,1);
+	 
+      var ros = new ROSLIB.Ros({
+        url: 'ws://localhost:8888'
+      });
+      ros.on('connection', function () {
+        alert('连接成功');
+        // Create the main viewer.
+        var viewer = new ROS2D.Viewer({
+          divID: 'map',
+          width: 1000,
+          height: 800,
+        });
+        var gridClient = new ROS2D.OccupancyGridClient({
+          ros: ros,
+          rootObject: viewer.scene
+        });
+        // Scale the canvas to fit to the map
+        gridClient.on('change', function () {
+          viewer.scaleToDimensions(gridClient.currentGrid.width, gridClient.currentGrid.height);
+          viewer.shift(gridClient.currentGrid.pose.position.x, gridClient.currentGrid.pose.position.y);
+        });
+      });
+      ros.on('error', function () {
+        alert('连接失败！');
+      });
+
+      ros.on('close', function () {
+        alert('连接断开!');
+      });
+    }
+    init();
+  </script>
+</body>
+
+</html>
