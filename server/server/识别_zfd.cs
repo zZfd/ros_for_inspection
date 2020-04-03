@@ -29,6 +29,12 @@ namespace 服务端
         //MySqlConnection mycon;//数据库连接
         private static string IniFilePath;
         private static string saveImgpath;
+
+        //项目ID 任务ID 巡检员ID  巡检设备ID
+        string proID = null;
+        string missionID = null;
+        string inspectorID = null;
+        string equipmentID = null;
         public formRec_zfd()
         {
             InitializeComponent();
@@ -63,7 +69,7 @@ namespace 服务端
                 //服务端创建一个负责监听IP和端口号的Socket
                 socketWatch = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 IPAddress ip = IPAddress.Parse(message.serverIP);
-                IPEndPoint point = new IPEndPoint(ip, 10001);
+                IPEndPoint point = new IPEndPoint(ip, 2020);
                 socketWatch.Bind(point);//绑定端口号
                 socketWatch.Listen(10);//监听队列的长度
                 //创建监听线程
@@ -110,42 +116,97 @@ namespace 服务端
         }
 
         //接收客户端信息
-        private void recieve(object o){
+        //    private void recieve(object o){
+        //        int imgPathLength = 0;//文件名长度
+        //        string imgPath = null;//文件名
+        //            while (true)
+        //            {
+        //                try
+        //        {
+        //                byte[] tokenBuf = new byte[6];//标志位字节数为6 img<<<
+
+        //                //实际接收到的有效字节数
+        //                int len = socketServer.Receive(tokenBuf);
+        //                if (len == 0)
+        //                    break;
+        //                string token = Encoding.ASCII.GetString(tokenBuf, 0, len);
+
+        //                if (token=="img<<<")
+        //                {
+        //                    byte[] imgLenBuf = new byte[6];
+        //                    socketServer.Receive(imgLenBuf);
+        //                    int imgLen = Convert.ToInt32(Encoding.ASCII.GetString(imgLenBuf));
+        //                    byte[] imgBuf = new byte[imgLen];
+        //                    byte[] buf = new byte[imgLen];
+        //                    int len2;
+        //                    int index = 0;
+        //                    do
+        //                    {
+        //                        len2 = socketServer.Receive(buf, imgLen - index, SocketFlags.None);
+        //                        Array.Copy(buf, 0, imgBuf, index, len2);
+        //                        index += len2;
+        //                    } while (index < imgBuf.Length);
+        //                    MemoryStream ms = new MemoryStream(imgBuf);
+        //                    ms.Write(imgBuf, 0, imgBuf.Length);
+        //                    Image photo;
+        //                    photo = Image.FromStream(ms, true);
+        //                    ms.Close();
+        //                    imgPath = saveImgpath+@"\server"
+        //                       + DateTime.Now.Year.ToString() + "-"
+        //                       + DateTime.Now.Month.ToString() + "-"
+        //                       + DateTime.Now.Day.ToString() + "-"
+        //                       + DateTime.Now.Hour.ToString() + "-"
+        //                       + DateTime.Now.Minute.ToString() + "-"
+        //                       + DateTime.Now.Second.ToString()
+        //                       + ".bmp";
+        //                    //文件名 和 文件名长度 需发送给识别算法
+        //                    imgPathLength = imgPath.Length;
+        //                    photo.Save(imgPath, ImageFormat.Bmp);//保存图片
+        //                    pictureBox1.Image = photo;
+        //                    textBox1.Text = imgPath;
+        //                    imgLenBuf = null;
+        //                    imgBuf = null;
+        //                }
+        //                else if(token == "msg<<<")
+        //                {
+        //                    //类型ID +二维码位置(下Y 右X 右Y 左X 左Y)  1 49 189 214 207 72
+        //                    byte[] msgBuf = new byte[21];
+        //                    socketServer.Receive(msgBuf, msgBuf.Length, SocketFlags.None);
+        //                    string message = Encoding.ASCII.GetString(msgBuf);
+        //                    //MessageBox.Show(message);
+        //                    string[] messageInfo = message.Split(' ');
+        //                    textBox2.Text = messageInfo[0];//项目类型 1
+        //                    //49 189 214 207 72
+        //                    textBox3.Text = messageInfo[1] + " " + messageInfo[2] + " " + messageInfo[3] + " " + messageInfo[4] + " " + messageInfo[5];
+        //                    //算法识别仪器是否正常
+        //                    String sse = rec(imgPath,imgPathLength);               
+        //                    if (sse.Substring(0, 2) == "-1")
+        //                    {
+        //                        sse = "failed";
+        //                    }
+        //                    if (sse.Substring(0, 2) == "-3")
+        //                    {
+        //                        sse = "hotSpot";
+        //                    }
+        //                    byte[] se = Encoding.ASCII.GetBytes(sse);
+        //                    socketServer.Send(se, se.Length, 0);//将结果回传给手持端
+        //                }
+
+        //        }
+        //                catch (Exception ) { 
+        //                    recThread.Abort();//无客户端连接时断开接收线程
+        //                } 
+        //            }     
+        //}
+
+        //服务端与识别算法的通信得到返回结果
+        private void recieve(object o)
+        {
             int imgPathLength = 0;//文件名长度
             string imgPath = null;//文件名
-                while (true)
-                {
-                    try
-            {
-                    byte[] tokenBuf = new byte[6];//标志位字节数为6 img<<<
-                   
-                    //实际接收到的有效字节数
-                    int len = socketServer.Receive(tokenBuf);
-                    if (len == 0)
-                        break;
-                    string token = Encoding.ASCII.GetString(tokenBuf, 0, len);
-                    
-                    if (token=="img<<<")
-                    {
-                        byte[] imgLenBuf = new byte[6];
-                        socketServer.Receive(imgLenBuf);
-                        int imgLen = Convert.ToInt32(Encoding.ASCII.GetString(imgLenBuf));
-                        byte[] imgBuf = new byte[imgLen];
-                        byte[] buf = new byte[imgLen];
-                        int len2;
-                        int index = 0;
-                        do
-                        {
-                            len2 = socketServer.Receive(buf, imgLen - index, SocketFlags.None);
-                            Array.Copy(buf, 0, imgBuf, index, len2);
-                            index += len2;
-                        } while (index < imgBuf.Length);
-                        MemoryStream ms = new MemoryStream(imgBuf);
-                        ms.Write(imgBuf, 0, imgBuf.Length);
-                        Image photo;
-                        photo = Image.FromStream(ms, true);
-                        ms.Close();
-                        imgPath = saveImgpath+@"\server"
+            MemoryStream fsWrite = new MemoryStream();
+
+            imgPath = saveImgpath //saveImgpath+ saveImgpath+ @"C:\Users\sysip\Desktop\"
                            + DateTime.Now.Year.ToString() + "-"
                            + DateTime.Now.Month.ToString() + "-"
                            + DateTime.Now.Day.ToString() + "-"
@@ -153,47 +214,84 @@ namespace 服务端
                            + DateTime.Now.Minute.ToString() + "-"
                            + DateTime.Now.Second.ToString()
                            + ".bmp";
-                        //文件名 和 文件名长度 需发送给识别算法
-                        imgPathLength = imgPath.Length;
-                        photo.Save(imgPath, ImageFormat.Bmp);//保存图片
-                        pictureBox1.Image = photo;
-                        textBox1.Text = imgPath;
-                        imgLenBuf = null;
-                        imgBuf = null;
+            long length = 0;
+            while (true)
+            {
+                try
+                {
+                    Byte[] Rec = new byte[1024];
+                    
+                    int len = socketServer.Receive(Rec);
+                    if (len == 0)
+                    {
+                        break;
                     }
-                    else if(token == "msg<<<")
+
+                    if (Rec[0] == 1)//接收项目图片
+                    {
+
+                        length = int.Parse(Encoding.ASCII.GetString(Rec, 1, len - 1));
+                        byte[] buffer = new byte[length];
+                        socketServer.Receive(buffer);
+                        fsWrite.Write(buffer, 0, buffer.Length);
+                        Bitmap photo;
+                        photo = (Bitmap)Image.FromStream(fsWrite, true, true);
+                        fsWrite.Close();
+                        FileStream fs = new FileStream(imgPath, FileMode.Create, FileAccess.Write);
+                        fs.Write(buffer, 0, buffer.Length);
+                        fs.Close();
+                        //photo.Save(imgPath);//保存图片
+                        pictureBox1.Image = photo;
+                        imgPathLength = imgPath.Length;
+                        tBoxImgPath.Text = imgPath;
+
+                    }
+                    else if (Rec[0] == 2)//接收项目信息
                     {
                         //类型ID +二维码位置(下Y 右X 右Y 左X 左Y)  1 49 189 214 207 72
-                        byte[] msgBuf = new byte[21];
+                        //补接收项目ID 任务ID 巡检员ID 巡检设备ID
+                        //补充判别算法是否识别成功   仪表读数是否异常
+                        byte[] msgBuf = new byte[50];
                         socketServer.Receive(msgBuf, msgBuf.Length, SocketFlags.None);
                         string message = Encoding.ASCII.GetString(msgBuf);
                         //MessageBox.Show(message);
                         string[] messageInfo = message.Split(' ');
-                        textBox2.Text = messageInfo[0];//项目类型 1
+                        tBoxProType.Text = messageInfo[0];//项目类型 1
                         //49 189 214 207 72
-                        textBox3.Text = messageInfo[1] + " " + messageInfo[2] + " " + messageInfo[3] + " " + messageInfo[4] + " " + messageInfo[5];
+                        tBoxQrPos.Text = messageInfo[1] + " " + messageInfo[2] + " " + messageInfo[3] + " " + messageInfo[4] + " " + messageInfo[5];
+                        proID = messageInfo[6];
+                        missionID = messageInfo[7];
+                        inspectorID = messageInfo[8];
+                        equipmentID = messageInfo[9];
+
                         //算法识别仪器是否正常
-                        String sse = rec(imgPath,imgPathLength);               
-                        if (sse.Substring(0, 2) == "-1")
-                        {
-                            sse = "failed";
-                        }
-                        if (sse.Substring(0, 2) == "-3")
-                        {
-                            sse = "hotSpot";
-                        }
+                        //string sse = rec(imgPath, imgPathLength);
+                        //if (sse.Substring(0, 2) == "-1")
+                        //{
+                        //    sse = "failed";
+                        //}
+                        //if (sse.Substring(0, 2) == "-3")
+                        //{
+                        //    sse = "hotSpot";
+                        //}
+
+                        //judgeRecResult(sse);//先判断结果
+                        //saveRecResult(sse);//再保存结果到数据库
+                        //回传给手持端 识别结果   算法是否正确识别   仪表读数是否异常
+                        /*string response = sse + " "
+                                        + isNormal.ToString() + " "
+                                        + isSuccess.ToString();
                         byte[] se = Encoding.ASCII.GetBytes(sse);
-                        socketServer.Send(se, se.Length, 0);//将结果回传给手持端
+                        socketServer.Send(se, se.Length, 0);*/
                     }
 
+                }
+                catch (Exception)
+                {
+                    recThread.Abort();//无客户端连接时断开接收线程
+                }
             }
-                    catch (Exception ) { 
-                        recThread.Abort();//无客户端连接时断开接收线程
-                    } 
-                }     
-    }
-
-        //服务端与识别算法的通信得到返回结果
+        }
         private string rec(string fileName,int fileNameLength)
         {
             string result = null;
@@ -207,7 +305,7 @@ namespace 服务端
                 client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 client.Connect(ipport);   
                 //发送给识别算法 类型ID 文件名长度 文件名 二维码位置
-                String sse = textBox2.Text + " " + fileNameLength + " " + fileName + " " + textBox3.Text;
+                String sse = tBoxProType.Text + " " + fileNameLength + " " + fileName + " " + tBoxQrPos.Text;
                 byte[] se = Encoding.ASCII.GetBytes(sse);
                 client.Send(se, se.Length, 0);
                 client.Shutdown(System.Net.Sockets.SocketShutdown.Send);   
