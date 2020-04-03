@@ -68,8 +68,8 @@ namespace 服务端
             {
                 //服务端创建一个负责监听IP和端口号的Socket
                 socketWatch = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IPAddress ip = IPAddress.Parse(message.serverIP);
-                IPEndPoint point = new IPEndPoint(ip, 2020);
+                //IPAddress ip = IPAddress.Parse(message.serverIP);
+                IPEndPoint point = new IPEndPoint(IPAddress.Any, 2020);
                 socketWatch.Bind(point);//绑定端口号
                 socketWatch.Listen(10);//监听队列的长度
                 //创建监听线程
