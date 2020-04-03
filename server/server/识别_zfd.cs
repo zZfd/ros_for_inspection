@@ -31,6 +31,11 @@ namespace 服务端
         private static string IniFilePath;
         private static string saveImgpath;
 
+        private static int imgPathLength = 0;//文件名长度
+        private static string qrPos;
+        private static string proType;
+
+
         //项目ID 任务ID 巡检员ID  巡检设备ID
         string proID = null;
         string missionID = null;
@@ -41,14 +46,14 @@ namespace 服务端
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
         }
-       
+
         [DllImport("kernel32.dll")]
 
         private static extern long WritePrivateProfileString(string section, string key, string value, string filepath);
 
         [DllImport("kernel32.dll")]
 
-        private static extern int GetPrivateProfileString(string section,string key,string def,StringBuilder returnvalue,int buffersize,string filepath);
+        private static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder returnvalue, int buffersize, string filepath);
 
         private void newRecon_zfd_Load(object sender, EventArgs e)
         {
@@ -58,13 +63,15 @@ namespace 服务端
             //mycon.Open();
             IniFilePath = Application.StartupPath + "\\Config.ini";
             saveImgpath = @GetValue("Information", "SaveImgPath");
+
+
             IPAddress ip = IPAddress.Parse("127.0.0.1");
             IPEndPoint ipport = new IPEndPoint(ip, 10002);
             //connect with algorithm, ip 127.0.0.1 only for the same ip
             socketClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socketClient.Connect(ipport);
         }
-        
+
         /// <summary>
         /// 打开socket通信
         /// </summary>
@@ -86,21 +93,23 @@ namespace 服务端
                 closeBtn.Enabled = true;
                 openBtn.Enabled = false;
             }
-            catch (Exception ex) { 
+            catch (Exception ex)
+            {
                 MessageBox.Show(ex.Message);
-                
+
             }
-           
+
         }
 
         //监听客户端连接
-        private void listen(object o) {
+        private void listen(object o)
+        {
             Socket socketWatch = o as Socket; //连接套接词
-            
-                while (true)
+
+            while (true)
+            {
+                try
                 {
-                    try
-                    {
                     socketServer = socketWatch.Accept();
                     //MessageBox.Show("客户端已连接");
                     #region
@@ -113,13 +122,13 @@ namespace 服务端
                     recThread = new Thread(recieve);
                     recThread.IsBackground = true;
                     recThread.Start(socketServer);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("listen 客户端连接失败!"+ex.Message  );
-                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("listen 客户端连接失败!" + ex.Message);
+                }
             }
-            
+
         }
 
         //接收客户端信息
@@ -209,7 +218,7 @@ namespace 服务端
         //服务端与识别算法的通信得到返回结果
         private void recieve(object o)
         {
-            int imgPathLength = 0;//文件名长度
+
             string imgPath = null;//文件名
             MemoryStream fsWrite = new MemoryStream();
 
@@ -228,7 +237,7 @@ namespace 服务端
                 try
                 {
                     byte[] recBuf = new byte[1024 * 1024];
-                    
+
                     int len = socketServer.Receive(recBuf);
                     if (len == 0)
                     {
@@ -238,23 +247,27 @@ namespace 服务端
                     if (recBuf[0] == 1)//接收项目图片
                     {
 
-               
+
                         //byte[] buffer = new byte[--len];
                         //socketServer.Receive(buffer);
                         //byte[] newBuf = Encoding.ASCII.
-                        fsWrite.Write(recBuf, 1, len-1);
+                        fsWrite.Write(recBuf, 1, len - 1);
                         Bitmap photo;
                         photo = (Bitmap)Image.FromStream(fsWrite, true, true);
                         fsWrite.Close();
-                        MessageBox.Show(imgPath);
+                        //MessageBox.Show(imgPath);
                         FileStream fs = new FileStream(imgPath, FileMode.Create, FileAccess.Write);
-                        fs.Write(recBuf, 1, len-1);
+                        fs.Write(recBuf, 1, len - 1);
                         fs.Close();
                         //MessageBox.Show(imgPath);
                         //photo.Save(imgPath);//保存图片
                         pictureBox1.Image = photo;
                         //imgPathLength = imgPath.Length;
-                        tBoxImgPath.Text = imgPath;
+                        //this.BeginInvoke(new Action(delegate ()
+                        //{
+                        //    this.tBoxImgPath.Text = imgPath;
+                        //}));
+
 
                     }
                     else if (recBuf[0] == 2)//接收项目信息
@@ -264,17 +277,22 @@ namespace 服务端
                         //补充判别算法是否识别成功   仪表读数是否异常
                         //byte[] msgBuf = recBuf.;
                         //socketServer.Receive(msgBuf, msgBuf.Length, SocketFlags.None);
-                        string message = Encoding.ASCII.GetString(recBuf,1,len-1);
+                        string message = Encoding.ASCII.GetString(recBuf, 1, len - 1);
                         //MessageBox.Show(message);
                         string[] messageInfo = message.Split(' ');
-                        tBoxProType.Text = messageInfo[0];//项目类型 1
-                        //49 189 214 207 72
-                        tBoxQrPos.Text = messageInfo[1] + " " + messageInfo[2] + " " + messageInfo[3] + " " + messageInfo[4] + " " + messageInfo[5];
+
+                        proType = messageInfo[0];//项目类型 1
+                        qrPos = messageInfo[1] + " " + messageInfo[2] + " " + messageInfo[3] + " " + messageInfo[4] + " " + messageInfo[5];
                         proID = messageInfo[6];
                         missionID = messageInfo[7];
                         inspectorID = messageInfo[8];
                         equipmentID = messageInfo[9];
-
+                        //this.BeginInvoke(new Action(delegate ()
+                        //{
+                        //    this.tBoxProType.Text = messageInfo[0];//项目类型 1
+                        //    //49 189 214 207 72
+                        //    this.tBoxQrPos.Text = messageInfo[1] + " " + messageInfo[2] + " " + messageInfo[3] + " " + messageInfo[4] + " " + messageInfo[5];
+                        //}));
                         //算法识别仪器是否正常
                         string recognizeResult = Recognize(imgPath, imgPathLength);
                         /*if (recognizeResult.Substring(0, 2) == "-1")
@@ -297,13 +315,14 @@ namespace 服务端
                     }
 
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    MessageBox.Show(ex.Message);
                     recThread.Abort();//无客户端连接时断开接收线程
                 }
             }
         }
-        private string Recognize(string fileName,int fileNameLength)
+        private string Recognize(string fileName, int fileNameLength)
         {
             string result = null;
 
@@ -314,12 +333,12 @@ namespace 服务端
                 IPEndPoint ipport = new IPEndPoint(ip, 10002);
                 Socket client;
                 client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                client.Connect(ipport); */  
+                client.Connect(ipport); */
                 //发送给识别算法 类型ID 文件名长度 文件名 二维码位置 in order
-                string infoToAlgo = tBoxProType.Text + " " + fileNameLength + " " + fileName + " " + tBoxQrPos.Text;
+                string infoToAlgo = proType + " " + fileNameLength + " " + fileName + " " + qrPos;
                 byte[] toAloBuf = Encoding.ASCII.GetBytes(infoToAlgo);
                 socketClient.Send(toAloBuf, toAloBuf.Length, 0);
-                socketClient.Shutdown(System.Net.Sockets.SocketShutdown.Send);   
+                //socketClient.Shutdown(System.Net.Sockets.SocketShutdown.Send);
                 /*if (fileName != null)
                 {
                     FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
@@ -393,7 +412,7 @@ namespace 服务端
         {
             //mycon.Close();//关闭数据库
             socketWatch.Close();
-            if(socketServer != null)
+            if (socketServer != null)
             {
                 socketServer.Close();
             }
@@ -401,11 +420,12 @@ namespace 服务端
 
         private void btnImgPth_Click(object sender, EventArgs e)
         {
-           
-            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK) {
+
+            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            {
                 string path = folderBrowserDialog1.SelectedPath;
                 WritePrivateProfileString("Information", "SaveImgPath", path, IniFilePath);
-                saveImgpath = @GetValue("Information","SaveImgPath");
+                saveImgpath = @GetValue("Information", "SaveImgPath");
             }
         }
 
@@ -414,7 +434,7 @@ namespace 服务端
 
             StringBuilder stringBuilder = new StringBuilder();
 
-            GetPrivateProfileString(section,key,"", stringBuilder, 1024, IniFilePath);
+            GetPrivateProfileString(section, key, "", stringBuilder, 1024, IniFilePath);
 
             string value = stringBuilder.ToString();
             return value;
