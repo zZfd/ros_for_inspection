@@ -23,8 +23,9 @@ namespace 服务端
 {
     public partial class formRec_zfd : Form
     {
-        private static Socket socketServer; //服务套接词
-        private static Socket socketWatch;//监听套接词
+        private static Socket socketServer; //socket of server, interacting with robot
+        private static Socket socketWatch;//socket of watch, watching who connects with socketServer
+        private static Socket socketClient; //socket of client, interacting with algorithm
         private static Thread recThread;//接收线程
         //MySqlConnection mycon;//数据库连接
         private static string IniFilePath;
@@ -57,6 +58,11 @@ namespace 服务端
             //mycon.Open();
             IniFilePath = Application.StartupPath + "\\Config.ini";
             saveImgpath = @GetValue("Information", "SaveImgPath");
+            IPAddress ip = IPAddress.Parse("127.0.0.1");
+            IPEndPoint ipport = new IPEndPoint(ip, 10002);
+            //connect with algorithm, ip 127.0.0.1 only for the same ip
+            socketClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socketClient.Connect(ipport);
         }
         
         /// <summary>
@@ -69,6 +75,7 @@ namespace 服务端
                 //服务端创建一个负责监听IP和端口号的Socket
                 socketWatch = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 //IPAddress ip = IPAddress.Parse(message.serverIP);
+                //ip.Any, run in server
                 IPEndPoint point = new IPEndPoint(IPAddress.Any, 2020);
                 socketWatch.Bind(point);//绑定端口号
                 socketWatch.Listen(10);//监听队列的长度
@@ -202,7 +209,7 @@ namespace 服务端
         //服务端与识别算法的通信得到返回结果
         private void recieve(object o)
         {
-            //int imgPathLength = 0;//文件名长度
+            int imgPathLength = 0;//文件名长度
             string imgPath = null;//文件名
             MemoryStream fsWrite = new MemoryStream();
 
@@ -214,6 +221,7 @@ namespace 服务端
                            + DateTime.Now.Minute.ToString() + "-"
                            + DateTime.Now.Second.ToString()
                            + ".bmp";
+            imgPathLength = imgPath.Length;
             //long length = 0;
             while (true)
             {
@@ -268,24 +276,24 @@ namespace 服务端
                         equipmentID = messageInfo[9];
 
                         //算法识别仪器是否正常
-                        //string sse = rec(imgPath, imgPathLength);
-                        //if (sse.Substring(0, 2) == "-1")
-                        //{
-                        //    sse = "failed";
-                        //}
-                        //if (sse.Substring(0, 2) == "-3")
-                        //{
-                        //    sse = "hotSpot";
-                        //}
+                        string recognizeResult = Recognize(imgPath, imgPathLength);
+                        /*if (recognizeResult.Substring(0, 2) == "-1")
+                        {
+                            recognizeResult = "failed";
+                        }
+                        if (recognizeResult.Substring(0, 2) == "-3")
+                        {
+                            recognizeResult = "hotSpot";
+                        }*/
 
                         //judgeRecResult(sse);//先判断结果
                         //saveRecResult(sse);//再保存结果到数据库
                         //回传给手持端 识别结果   算法是否正确识别   仪表读数是否异常
                         /*string response = sse + " "
                                         + isNormal.ToString() + " "
-                                        + isSuccess.ToString();
-                        byte[] se = Encoding.ASCII.GetBytes(sse);
-                        socketServer.Send(se, se.Length, 0);*/
+                                        + isSuccess.ToString();*/
+                        byte[] toRobotBuf = Encoding.ASCII.GetBytes(recognizeResult);
+                        socketServer.Send(toRobotBuf, toRobotBuf.Length, 0);
                     }
 
                 }
@@ -295,23 +303,23 @@ namespace 服务端
                 }
             }
         }
-        private string rec(string fileName,int fileNameLength)
+        private string Recognize(string fileName,int fileNameLength)
         {
             string result = null;
 
             try
             {
                 //建立管理端与识别算法的通信
-                IPAddress ip = IPAddress.Parse(message.serverIP);
+                /*IPAddress ip = IPAddress.Parse(message.serverIP);
                 IPEndPoint ipport = new IPEndPoint(ip, 10002);
                 Socket client;
                 client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                client.Connect(ipport);   
-                //发送给识别算法 类型ID 文件名长度 文件名 二维码位置
-                String sse = tBoxProType.Text + " " + fileNameLength + " " + fileName + " " + tBoxQrPos.Text;
-                byte[] se = Encoding.ASCII.GetBytes(sse);
-                client.Send(se, se.Length, 0);
-                client.Shutdown(System.Net.Sockets.SocketShutdown.Send);   
+                client.Connect(ipport); */  
+                //发送给识别算法 类型ID 文件名长度 文件名 二维码位置 in order
+                string infoToAlgo = tBoxProType.Text + " " + fileNameLength + " " + fileName + " " + tBoxQrPos.Text;
+                byte[] toAloBuf = Encoding.ASCII.GetBytes(infoToAlgo);
+                socketClient.Send(toAloBuf, toAloBuf.Length, 0);
+                socketClient.Shutdown(System.Net.Sockets.SocketShutdown.Send);   
                 /*if (fileName != null)
                 {
                     FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
@@ -324,9 +332,9 @@ namespace 服务端
                 }*/
 
                 //接收识别结果
-                byte[] re = new byte[1024];
-                int bytes = client.Receive(re, re.Length, 0);
-                result = Encoding.ASCII.GetString(re, 0, bytes);
+                byte[] recoResBuf = new byte[1024];
+                int len = socketClient.Receive(recoResBuf);
+                result = Encoding.ASCII.GetString(recoResBuf, 0, len);
                 //double res = Convert.ToDouble(result);
                 //将结果写入数据库
                 //insert into result(ResultID,TypeID,Type1) values(58,1,2.22);
@@ -345,16 +353,13 @@ namespace 服务端
                 mycom.Parameters["@res"].Value = (float)res;
                 //mycom.ExecuteNonQuery();
                 if (mycom.ExecuteReader().HasRows) MessageBox.Show("添加成功");*/
-                client.Close();
+                //client.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
             }
-
-
             return result;
-
         }
         private void button2_Click(object sender, EventArgs e)
         {
