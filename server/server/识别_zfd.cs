@@ -202,7 +202,7 @@ namespace 服务端
         //服务端与识别算法的通信得到返回结果
         private void recieve(object o)
         {
-            int imgPathLength = 0;//文件名长度
+            //int imgPathLength = 0;//文件名长度
             string imgPath = null;//文件名
             MemoryStream fsWrite = new MemoryStream();
 
@@ -214,46 +214,49 @@ namespace 服务端
                            + DateTime.Now.Minute.ToString() + "-"
                            + DateTime.Now.Second.ToString()
                            + ".bmp";
-            long length = 0;
+            //long length = 0;
             while (true)
             {
                 try
                 {
-                    Byte[] Rec = new byte[1024];
+                    byte[] recBuf = new byte[1024 * 1024];
                     
-                    int len = socketServer.Receive(Rec);
+                    int len = socketServer.Receive(recBuf);
                     if (len == 0)
                     {
                         break;
                     }
 
-                    if (Rec[0] == 1)//接收项目图片
+                    if (recBuf[0] == 1)//接收项目图片
                     {
 
-                        length = int.Parse(Encoding.ASCII.GetString(Rec, 1, len - 1));
-                        byte[] buffer = new byte[length];
-                        socketServer.Receive(buffer);
-                        fsWrite.Write(buffer, 0, buffer.Length);
+               
+                        //byte[] buffer = new byte[--len];
+                        //socketServer.Receive(buffer);
+                        //byte[] newBuf = Encoding.ASCII.
+                        fsWrite.Write(recBuf, 1, len-1);
                         Bitmap photo;
                         photo = (Bitmap)Image.FromStream(fsWrite, true, true);
                         fsWrite.Close();
+                        MessageBox.Show(imgPath);
                         FileStream fs = new FileStream(imgPath, FileMode.Create, FileAccess.Write);
-                        fs.Write(buffer, 0, buffer.Length);
+                        fs.Write(recBuf, 1, len-1);
                         fs.Close();
+                        //MessageBox.Show(imgPath);
                         //photo.Save(imgPath);//保存图片
                         pictureBox1.Image = photo;
-                        imgPathLength = imgPath.Length;
+                        //imgPathLength = imgPath.Length;
                         tBoxImgPath.Text = imgPath;
 
                     }
-                    else if (Rec[0] == 2)//接收项目信息
+                    else if (recBuf[0] == 2)//接收项目信息
                     {
                         //类型ID +二维码位置(下Y 右X 右Y 左X 左Y)  1 49 189 214 207 72
                         //补接收项目ID 任务ID 巡检员ID 巡检设备ID
                         //补充判别算法是否识别成功   仪表读数是否异常
-                        byte[] msgBuf = new byte[50];
-                        socketServer.Receive(msgBuf, msgBuf.Length, SocketFlags.None);
-                        string message = Encoding.ASCII.GetString(msgBuf);
+                        //byte[] msgBuf = recBuf.;
+                        //socketServer.Receive(msgBuf, msgBuf.Length, SocketFlags.None);
+                        string message = Encoding.ASCII.GetString(recBuf,1,len-1);
                         //MessageBox.Show(message);
                         string[] messageInfo = message.Split(' ');
                         tBoxProType.Text = messageInfo[0];//项目类型 1
