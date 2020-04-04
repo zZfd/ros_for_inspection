@@ -31,29 +31,29 @@ namespace 服务端
         public static String ManagerID = "2";//管理员ID
         public static int isSuper = 0;//是否具有超级权限
 
-        public static int inspectorID;
+        //public static int inspectorID;
         public static String inspectorName = null;
 
-        public static int groupID;
-        public static int inspectequipmentID;
+        //public static int groupID;
+        //public static int inspectequipmentID;
         public static String routeName = null;
 
-        public static int missionID;
+        //public static int missionID;
         public static String missionItem = null;
 
 
-        public static int routeID;
-        public static int routeDeID;
+        //public static int routeID;
+        //public static int routeDeID;
         public static string routeComName = null;
         public static object routeMessage = null;
 
-        public static int devID;
+       // public static int devID;
         public static object devMessage = null;
 
-        public static int comID;
+       // public static int comID;
         public static object comMessage = null;
 
-        public static int proID;
+        //public static int proID;
         public static object proMessage = null;
 
         public static object tree1Message = null;
@@ -61,10 +61,10 @@ namespace 服务端
 
         //添加节点后，用以下两个参数重新定位树1的选中节点
         public static object addNodePa = null;
-        public static int addIndex;
+       // public static int addIndex;
 
         //移除节点后，用以下两个参数重新定位树2的选中节点
         public static object remNodePa = null;
-        public static int remIndex;
+        //public static int remIndex;
     }
 }

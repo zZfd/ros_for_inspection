@@ -20,3 +20,12 @@ E:\final_design\ros_for_inspection\server\server\obj\Debug\服务端.csproj.Core
 E:\final_design\ros_for_inspection\server\server\obj\Debug\服务端.csproj.CopyComplete
 E:\final_design\ros_for_inspection\server\server\obj\Debug\服务端.exe
 E:\final_design\ros_for_inspection\server\server\obj\Debug\服务端.pdb
+Z:\server\server\bin\Debug\服务端.exe.config
+Z:\server\server\obj\Debug\服务端.exe
+Z:\server\server\obj\Debug\服务端.pdb
+Z:\server\server\bin\Debug\服务端.exe
+Z:\server\server\bin\Debug\服务端.pdb
+Z:\server\server\obj\Debug\服务端.csprojResolveAssemblyReference.cache
+Z:\server\server\obj\Debug\服务端.Properties.Resources.resources
+Z:\server\server\obj\Debug\服务端.formRec_zfd.resources
+Z:\server\server\obj\Debug\服务端.csproj.GenerateResource.Cache
