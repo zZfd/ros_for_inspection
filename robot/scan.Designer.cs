@@ -48,6 +48,7 @@
             this.Controls.Add(this.pictureBox1);
             this.Name = "FormScan";
             this.Text = "scan";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormScan_FormClosed);
             this.Load += new System.EventHandler(this.FormScan_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);

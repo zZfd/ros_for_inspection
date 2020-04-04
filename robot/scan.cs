@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ZXing;
@@ -16,16 +17,17 @@ namespace Intelligent_robot_patrol
     public partial class FormScan : Form
     {
         private static Socket socket;
-        private static string serverIP = "127.0.0.1";//serverIP of fy
+        private static string serverIP = "47.97.173.230";//serverIP of fy
+        //private static string serverIP = "192.168.1.135";//serverIP of fy
         private static IPAddress ip = IPAddress.Parse(serverIP);
         private static int port = 2020;
         private static IPEndPoint location = new IPEndPoint(ip, port);
-        private static string imgURI = "file:///E:/final_design/ros_for_inspection/robot/ros/test.png";
+        private static string imgURI = "file:///E:/final_design/master_design/Intelligent_robot_patrol/test.png";
         private static WebRequest webReq = WebRequest.Create(imgURI);
         private static WebResponse webRes = webReq.GetResponse();
 
 
-        Timer timer = new Timer();
+        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
 
         public FormScan()
         {
@@ -40,6 +42,7 @@ namespace Intelligent_robot_patrol
             //{
                 socket = new Socket(AddressFamily.InterNetwork,SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(location);
+                MessageBox.Show("连接成功!");
 //}
             //catch (Exception) { MessageBox.Show("建立通信失败！"); };
             timer.Interval = 1000;
@@ -65,15 +68,20 @@ namespace Intelligent_robot_patrol
                         timer.Stop();
                         foreach (Result result in results)
                         {
-                            UploadProInfo(result);//prase project info and upload
+                             //firstly upload img. 
+                            //Because that server communication with algorithm after getting projectInfo
+                           //sync not async
                             UploadProImg(img);//upload project img
+                            Thread.Sleep(500);//process wait 500, socket sync is stupid
+                            string identifyResult = UploadProInfo(result);//prase project info and upload
+                            MessageBox.Show(identifyResult);
                         }
                     }
                 }
             }
         }
 
-        private void UploadProInfo(Result result)
+        private string UploadProInfo(Result result)
         {
 
             //二维码识别到的字符串，10位，前三位设备ID，后三位部件ID，再后三位项目ID，最后一位类型ID
@@ -130,6 +138,13 @@ namespace Intelligent_robot_patrol
             //list.AddRange(msbuf);
             //byte[] newBuffer = list.ToArray();
             //socket.Send(proInfoBuf, proInfoBuf);
+
+            //receive identify result from server
+            byte[] identifyResBuf = new byte[100];
+            int len = socket.Receive(identifyResBuf);
+            string identifyResult = Encoding.ASCII.GetString(identifyResBuf,0,len);
+            return identifyResult;
+
         }
 
         private void UploadProImg(Bitmap bitmap)
@@ -164,6 +179,12 @@ namespace Intelligent_robot_patrol
             }*/
 
             ms.Close();
+        }
+
+        private void FormScan_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            socket.Close();
+            Application.Exit();
         }
     }
 }
